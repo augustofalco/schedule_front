@@ -1,0 +1,17 @@
+/* Archivo: Calendario.css */
+.fc {
+    font-family: 'Arial', sans-serif;
+  }
+  
+  .fc-daygrid-event {
+    background-color: #cc0066;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 5px;
+  }
+  
+  .fc-daygrid-day-number {
+    color: #cc0066;
+  }
+  
