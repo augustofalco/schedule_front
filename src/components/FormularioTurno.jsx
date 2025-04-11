@@ -1,116 +1,110 @@
-import React, { useState } from 'react';
-import { TextField, Button, Grid, Typography, Container } from '@mui/material';
+import React, { useState } from "react";
+import { Form, Button } from "react-bootstrap";
 
-const FormularioTurno = ({ onGuardarTurno, onClose, onTurnoGuardado }) => {
-  const [turno, setTurno] = useState({
-    dia: '',
-    hora: '',
-    nombreClienta: '',
-    observacion: '',
-  });
+const FormularioTurno = ({ onClose, onTurnoCreado }) => {
+  const [nombreClienta, setNombreClienta] = useState("");
+  const [dia, setDia] = useState("");
+  const [hora, setHora] = useState("");
+  const [observacion, setObservacion] = useState("");
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setTurno((prevTurno) => ({
-      ...prevTurno,
-      [name]: value,
-    }));
-  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  const guardarTurno = async (turno) => {
+    // Validación personalizada
+    if (!hora) {
+      alert("Por favor seleccioná una hora válida.");
+      return;
+    }
+
+    const nuevoTurno = {
+      nombreClienta,
+      dia,
+      hora,
+      observacion,
+    };
+
     try {
-      const response = await fetch('http://localhost:3001/api/turnos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(turno),
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/api/turnos`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(nuevoTurno),
+        }
+      );
 
-      if (!response.ok) throw new Error('Error al guardar turno');
       const data = await response.json();
-      console.log('Turno guardado:', data);
 
-      // Recargamos el calendario si se pasa la función onTurnoGuardado
-      if (onTurnoGuardado) {
-        onTurnoGuardado(data);
+      if (response.ok) {
+        // Limpiar formulario
+        setNombreClienta("");
+        setDia("");
+        setHora("");
+        setObservacion("");
+
+        if (onTurnoCreado) onTurnoCreado();
+        if (onClose) onClose();
+      } else {
+        console.error("Error al guardar el turno:", data?.message || "Error desconocido");
+        alert("Error al guardar el turno: " + (data?.message || "Error desconocido"));
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error("Error en la solicitud:", error);
+      alert("Error en la solicitud: " + error.message);
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    guardarTurno(turno);  // Llamamos a guardarTurno aquí
-    setTurno({ dia: '', hora: '', nombreClienta: '', observacion: '' });
-    if (onClose) onClose(); // Cerramos el modal si existe la función
-  };
-
   return (
-    <Container component="main" maxWidth="xs">
-      <Typography variant="h5" align="center" gutterBottom>
-        Agendar Nuevo Turno
-      </Typography>
-      <form onSubmit={handleSubmit}>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Día"
-              type="date"
-              name="dia"
-              value={turno.dia}
-              onChange={handleChange}
-              InputLabelProps={{ shrink: true }}
-              required
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Hora"
-              type="time"
-              name="hora"
-              value={turno.hora}
-              onChange={handleChange}
-              InputLabelProps={{ shrink: true }}
-              required
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Nombre de la Clienta"
-              name="nombreClienta"
-              value={turno.nombreClienta}
-              onChange={handleChange}
-              required
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Observación"
-              name="observacion"
-              value={turno.observacion}
-              onChange={handleChange}
-              multiline
-              rows={3}
-            />
-          </Grid>
-          <Grid item xs={12} container justifyContent="space-between">
-            <Button variant="outlined" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button type="submit" variant="contained" color="error">
-              Guardar Turno
-            </Button>
-          </Grid>
-        </Grid>
-      </form>
-    </Container>
+    <Form onSubmit={handleSubmit}>
+      <Form.Group className="mb-3">
+        <Form.Label>Nombre de la clienta</Form.Label>
+        <Form.Control
+          type="text"
+          value={nombreClienta}
+          onChange={(e) => setNombreClienta(e.target.value)}
+          required
+        />
+      </Form.Group>
+
+      <Form.Group className="mb-3">
+        <Form.Label>Día</Form.Label>
+        <Form.Control
+          type="date"
+          value={dia}
+          onChange={(e) => setDia(e.target.value)}
+          required
+        />
+      </Form.Group>
+
+      <Form.Group className="mb-3">
+        <Form.Label>Hora</Form.Label>
+          <Form.Control
+            type="time"
+            value={hora}
+            onChange={(e) => setHora(e.target.value)}
+          />
+      </Form.Group>
+
+      <Form.Group className="mb-3">
+        <Form.Label>Observación</Form.Label>
+        <Form.Control
+          as="textarea"
+          rows={3}
+          value={observacion}
+          onChange={(e) => setObservacion(e.target.value)}
+        />
+      </Form.Group>
+
+      <div className="d-flex justify-content-end">
+        <Button variant="secondary" onClick={onClose} className="me-2">
+          Cancelar
+        </Button>
+        <Button variant="primary" type="submit">
+          Guardar Turno
+        </Button>
+      </div>
+    </Form>
   );
 };
 
 export default FormularioTurno;
-
-
